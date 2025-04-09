@@ -1,0 +1,406 @@
+---
+title: "Aid Worker Security Analysis"
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    code-fold: true
+execute:
+    echo: true
+    warning: false
+    message: false
+nocite: |
+  @*
+---
+
+**Humanitarian aid workers face dangers every day**, whether in regions affected by war or areas hit by natural disasters. Despite the risks, they bravely work to help those who need it most, providing food, medical care, and shelter. More than that, they bring emotional comfort and hope to countless people suffering from disasters.
+
+![A female aid worker with the American Red Cross plays with a child in Haiti. Talia Frenkel / American Red Cross)](img/Red-Cross-Haiti.jpg)
+
+However, their own safety often does not receive enough attention. Nowadays, violent attacks have become a severe threat, significantly impacting those involved in humanitarian efforts. According to the [Aid Worker Security Database](https://www.aidworkersecurity.org/about), kidnappings, shootings, explosions, and violent harassment happen frequently, particularly in regions with ongoing war and terrorist activities. Aid workers risk their lives and may suffer injuries or even death while carrying out their duties.
+
+This dangerous situation not only endangers aid workers but also threatens the effectiveness of global humanitarian operations. When aid workers are unsafe, their ability to provide essential assistance is compromised. This intensifies the difficulty faced by people already struggling with poverty and disaster. Therefore, instead of just appreciating the outcomes of humanitarian aid, we must ensure the safety of those delivering it. It is essential to call on all relevant parties to take action and provide stronger protection measures for aid workers.
+
+![Members of the Palestine Red Crescent Society and other emergency services carry bodies of fellow rescuers killed a week earlier by Israeli forces, during a funeral procession at Nasser Hospital in Khan Younis, Gaza, on March 31, 2025. Eyad Baba / AFP](img/PalestinianIsraelConflict.webp)
+
+In this research, we analyze data from AWSD to examine security incidents from multiple perspectives. By analyzing event details, involved organizations, and victim profiles, we aim to identify global trends in security incidents, changing patterns of violence, and specific risk factors affecting various aid organizations and individuals. These findings will help policymakers and humanitarian organizations improve safety measures and better protect aid workers in future missions.
+
+## Temporal Trends in Security Incidents
+
+When conducting a macro-level analysis of security incidents, we first need to understand the overall trends. By counting the total number of security incidents per year, we can clearly observe the long-term trend and fluctuations. It helps identify key periods, such as years with sudden increases in incidents. It also provides a foundation for further exploring factors that may influence these events. Therefore, we created a time series plot showing the annual number of incidents, in order to illustrate how event frequency changes over time.
+
+<br>
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(plotly)
+df <- read.csv("data/security_incidents.csv")
+
+df <- df %>%
+  mutate(date = make_date(Year, Month)) %>%
+  filter(date < '2025-01-01')
+
+yearly_data <- df %>%
+  group_by(Year) %>%
+  summarise(count = n(),
+            total_affected = sum(Total.affected)) %>%
+  arrange(Year)
+
+p <- plot_ly(data = yearly_data,
+             x = ~Year, 
+             y = ~count,
+             customdata = ~total_affected,
+             type = "scatter",
+             mode = "lines+markers",
+             hovertemplate = "Year: %{x}<br>Num of incidents: %{y}<br>Num of victims: %{customdata}") %>%
+  layout(title = "Security Incidents Trend Over Time",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Number of Incidents"))
+
+p
+```
+
+<br>
+
+You can hover over the points to display the number of security incidents and the number of victims each year.
+
+From the line plot above, we can see that **the number of security incidents has generally increased** from 1997 to 2024. Specifically, from 1997 to 2001, the number of incidents remained stable at around 30. From 2002 to 2008, it gradually increased. After a slight decrease around 2010, the number of incidents peaked in 2013 at 252. It then rapidly declined to 148 before rising again to 276 in 2019. After a slight drop in 2022, the number of incidents reached a new historical high of 353 in 2024.
+
+## Global Trends in Security Incidents
+
+To better understand the causes behind these historical fluctuations, we created an animated map below. This will help further analyze trends in each country.
+
+```{python}
+import pandas as pd
+import plotly.express as px
+
+df = pd.read_csv("data/security_incidents.csv")
+df_clean = df.dropna(subset=["Country Code", "Total affected"])
+agg_data = df_clean.groupby(["Year", "Country"]).agg(
+    victims =("Total affected", "sum"),
+    count = ("Total affected", "size")
+).reset_index().rename(
+    columns={
+        'victims': 'Num of victims',
+        'count': 'Num of incidents'
+})
+
+fig = px.choropleth(
+    agg_data,
+    locations="Country",
+    locationmode='country names',
+    color="Num of incidents", 
+    hover_name="Country",
+    hover_data={
+        'Num of incidents': True,
+        'Num of victims': True,
+        "Country" : False,
+        "Year" : False
+    },
+    animation_frame="Year",
+    color_continuous_scale="Reds",
+    range_color=(agg_data["Num of incidents"].min(), agg_data["Num of incidents"].max()),
+    title="Animated Global Map: Number of Security Incidents Over Time"
+)
+
+fig.update_layout(
+    geo=dict(
+        showframe=False,
+        showcoastlines=False,
+        projection_type="equirectangular"
+    )
+)
+
+```
+
+You can zoom in on the map and hover to view the number of security incidents and victims for each country per year.
+
+The choropleth map uses `color` to represent *the number of security incidents* in each country for a given year. The darker red indicates a higher number of incidents. From the animated map, we can observe that the number of red countries is increasing, and the colors are deepening. This reflects the overall increase in incidents, which aligns with our previous analysis. **Geographically, the countries with more incidents are concentrated in Africa and the Middle East.**
+
+For example, **Afghanistan** saw a significant increase in incidents starting in 2002 due to the **Afghanistan War**. The period from 2010 to 2014 was particularly severe, as NATO and U.S. forces were deeply involved in the conflict. The peak in 2013, with 167 incidents and 81 affected aid workers (including those wounded, killed, or kidnapped), is the most severe toll across all countries and years, highlighting the dangerous environment for humanitarian workers in the region.
+
+**Sudan** in 2006 experienced 87 incidents, as the **Darfur conflict** continued to ravage the western region of the country. The war, which had been ongoing since 2003, saw widespread violence against civilians and humanitarian workers, particularly in the Darfur region, as government-backed militia groups targeted aid workers.
+
+In **Somalia**, 2008 saw 86 incidents, during a time when the country was embroiled in **civil war** and instability. The conflict between the Transitional Federal Government, backed by Ethiopian forces, and the militant group Al-Shabaab, created an extremely dangerous environment for both local and international aid workers, especially as the violence intensified in the south and central regions.
+
+**Syria**, in 2013, had 70 incidents, largely due to the ongoing **Syrian Civil War** that began in 2011. The war escalated during this period, as the conflict shifted from a peaceful uprising to a brutal civil war involving various factions, including the Syrian government, opposition groups, and foreign powers. Aid workers were often targeted, particularly in areas controlled by opposing forces or those caught in the crossfire.
+
+In **South Sudan**, 2018 saw 111 incidents. This period followed the country's independence in 2011 and the outbreak of a **civil war** in 2013. The violence between the government and opposition forces in the region had devastating consequences for aid workers, as many humanitarian organizations struggled to assist in ongoing hostilities and a lack of security.
+
+## Trends in Humanitarian Organization Involvement
+
+From the analysis above, it is clear that the number of security incidents and the number of victims are positively correlated. Additionally, it is important to note that different humanitarian organizations (such as the `UN, INGOs, ICRC, NRCS, IFRC, NNGOs`) face varying levels of risk when performing aid work. To provide a more intuitive view of each organization's actual involvement over the years, we have used an animated scatter plot. This visualization allows us to observe the frequency of incidents faced by each organization and the variation in the number of affected aid workers, offering data support for understanding each organization's risk exposure and response strategies.
+
+<br>
+
+```{r}
+org_long <- df %>% 
+  pivot_longer(
+    cols = c(UN, INGO, ICRC, NRCS.and.IFRC, NNGO),
+    names_to = "org_type",
+    values_to = "victims"
+  ) %>%
+  filter(victims > 0) %>%
+  select(Year, org_type, victims)
+
+agg_data <- org_long %>%
+  group_by(Year, org_type) %>%
+  summarise(event_count = n(),
+            total_people = sum(victims)) %>%
+  ungroup()
+
+new_row <- tibble(Year = 1997, org_type = "NNGO", event_count = 0, total_people = 0)
+agg_data <- bind_rows(agg_data[1:2, ], new_row, agg_data[3:nrow(agg_data), ])
+
+
+p2 <- plot_ly(
+  data = agg_data,
+  x = ~event_count,
+  y = ~total_people, 
+  color = ~org_type, 
+  size = ~total_people,
+  frame = ~Year,
+  customdata = ~org_type,
+  type = 'scatter',
+  mode = 'markers',
+  marker = list(sizemode = 'area', opacity = 0.7),
+  hovertemplate = "Organization: %{customdata}<br>Num of incidents: %{x}<br>Num of victims: %{y}"
+) %>%
+  layout(
+    title = "Dynamic Overview of Humanitarian Organization Involvement",
+    xaxis = list(title = "Num of Incidents"),
+    yaxis = list(title = "Num of Victims")
+  )
+
+p2
+```
+
+<br>
+
+First, we introduce the humanitarian organizations. The `UN` (United Nations) is a global intergovernmental organization that promotes peace and provides humanitarian assistance. `INGOs` (International Non-Governmental Organizations) are international non-governmental organizations that operate across borders to deliver aid and development support. The `ICRC` (International Committee of the Red Cross) is an independent institution dedicated to protecting and assisting victims of armed conflict. `NRCS and IFRC` (National Red Cross Societies and International Federation of Red Cross and Red Crescent Societies) coordinate emergency response and humanitarian relief. `NNGOs` (National Non-Governmental Organizations) are national non-governmental organizations that focus on local aid efforts within their own countries.
+
+The animated scatter plot uses `color` to represent different organizations, with each scatter point corresponding to the number of security incidents and victims for a specific organization in a given year. The `size` of each point indicates the number of victims. You can hover over the points to see details.
+
+The visualization shows a **linear positive correlation between the number of security incidents and the number of victims**. Between 1997 and 1999, security incidents were few, and there were no significant differences among the organizations. After that period, as the number of incidents increased, the differences between organizations became more pronounced. 
+
+After 2003, `INGOs` experienced the **highest** number of security incidents in nearly every year, often far surpassing the other organizations. In 2008 and 2009, the `UN`'s involvement also increased significantly, coming close to that of `INGOs`. From 2010 to 2012, the `UN` and `NNGOs` exhibited similar trends with steadily increasing numbers, but both saw a sudden decline in 2014. Starting in 2018, `NNGOs` began to recover, eventually becoming the organization with the highest number of incidents by 2024.
+
+An **outlier** emerged in 2023 for the `UN`. The incident count was 57 but the victim count reached 243, clearly deviating from the normal pattern. Upon carefully reviewing the original data, it was discovered that 70 UN aid workers were killed and 22 were injured during the **clashes between the Israel Defense Forces (IDF) and Hamas in the Gaza Strip** in October 2023. Reports indicate most fatalities are due to aerial attacks. This event accounts for the **highest** victim count observed. 
+
+Additionally, another unusually high number of `UN` victims in 2024 is also related to Gaza. On March 14, 2024, one UN aid worker was killed and 22 were injured during a drone attack on a UN distribution center in Rafah, Gaza. According to UN agency reports, an additional 14 UN agency staff members were killed in the Gaza Strip between November 28th and December 29th, 2024.
+
+## Dynamic Changes in Victim Statistics
+
+The victim statistics of security incidents directly reflect the risks and losses experienced by aid workers. Since different incident types (killed, wounded, kidnapped) and nationalities (Nationals vs. Internationals) affect aid workers in various ways, a layered analysis of this data is essential.
+
+To visualize this, we used an animated stacked bar plot to display the number of victims by nationality  for each incident type. This plot clearly shows the varying proportions and trends among different groups, highlighting the dynamic changes in victim statistics over time.
+
+<br>
+
+```{r}
+agg_df <- df %>%
+  group_by(Year) %>%
+  summarise(
+    Nationals.killed     = sum(Nationals.killed),
+    Internationals.killed  = sum(Internationals.killed),
+    Nationals.wounded      = sum(Nationals.wounded),
+    Internationals.wounded = sum(Internationals.wounded),
+    Nationals.kidnapped    = sum(Nationals.kidnapped),
+    Internationals.kidnapped = sum(Internationals.kidnapped)
+  ) %>%
+  ungroup()
+
+agg_long <- agg_df %>%
+  pivot_longer(
+    cols = -Year,
+    names_to = "variable",
+    values_to = "count"
+  )
+
+agg_long <- agg_long %>%
+  separate(variable, into = c("Nationality", "Type")) %>%
+  mutate(Type = tools::toTitleCase(Type))
+
+p3 <- plot_ly(
+  data = agg_long,
+  x = ~Type,
+  y = ~count, 
+  color = ~Nationality, 
+  type = 'bar',
+  frame = ~Year,
+  customdata = ~Nationality,
+  hovertemplate = "Category: %{customdata}<br>Incident Type: %{x}<br>Num of victims: %{y}"
+) %>%
+  layout(
+    barmode = 'stack',
+    title = "Victim Breakdown by Nationality and Incident Type",
+    xaxis = list(title = "Incident Type"),
+    yaxis = list(title = "Number of Victims")
+  )
+
+p3
+```
+
+<br>
+
+You can play the animation and hover over the plot for detailed information on each year. 
+
+The stacked bar plot uses `color` to represent nationality, with `blue` segments indicating `national` victims and `green` segments indicating internat`ional victims. From the plot, it is evident that **national aid workers face significantly higher risks** across all three incident types (killed, wounded, kidnapped). This may indicate that domestic aid workers are more likely to be present in these regions, leading to a higher number of victims compared to international aid workers.
+
+Between 1997 and 2004, **the highest numbers were observed in the "killed" category**. From 2005 to 2018, all three incident types experienced a substantial and relatively balanced increase in numbers. In 2019, there was a **sharp increase in the number of wounded victims**, reaching 215. And this high level was maintained at 233 in 2020. After a slight decline, **the number of killed aid workers rose again** in 2023 and 2024, reaching historic highs of 272 and 369, respectively.
+
+**This pattern may be related to the means of attack**. Large-scale gun battles and aerial bombings can directly result in high numbers of fatalities and injuries, whereas kidnappings tend to be more targeted and costly. Consequently, the number of kidnapped victims generally does not exceed 150 per year. As warfare weaponry advances, there has been a significant increase in injuries and fatalities in recent years.
+
+## Seasonal Dynamics of Attack Methods
+
+In this section, we further investigated the frequency differences among various means of attack and uncovered any specific temporal patterns. By examining the distribution of different attack methods (such as shootings, aerial bombardment, kidnappings, etc.) on a monthly basis, we can identify which methods are more dominant in certain months and analyze potential seasonal factors that influence these incidents. 
+
+We created a monthly trend plot that breaks down the number of security incidents by the means of attack, providing specific temporal insights to aid in prevention and emergency response planning.
+
+<br>
+
+```{r}
+total_df <- df %>%
+  filter(!is.na(date)) %>%
+  group_by(date) %>%
+  summarise(total_attacks = n())
+
+attack_means <- df %>%
+  filter(!is.na(date)) %>%
+  group_by(date, Means.of.attack) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+p4 <- plot_ly() %>% add_trace(
+  data = total_df,
+  x = ~date,
+  y = ~total_attacks,
+  type = 'scatter',
+  mode = 'lines',
+  name = 'Total Attacks',
+  hovertemplate = "Date: %{x}<br>Means: Total Attacks<br>Num of incidents: %{y}"
+)
+
+# Add a line trace for each Means.of.attack category
+unique_means <- unique(attack_means$Means.of.attack)
+for(m in unique_means) {
+  df_mean <- attack_means %>% filter(Means.of.attack == m)
+  p4 <- p4 %>% add_trace(
+    data = df_mean,
+    x = ~date,
+    y = ~count,
+    type = 'scatter',
+    mode = 'lines',
+    name = m,
+    customdata = m,
+    hovertemplate = "Date: %{x}<br>Means: %{customdata}<br>Num of incidents: %{y}"
+  )
+}
+
+# Layout settings for the plot
+p4 <- p4 %>% layout(
+  title = "Monthly Number of Incidents by Means of Attack",
+  xaxis = list(title = "Date"),
+  yaxis = list(title = "Number of Incidents")
+)
+
+# Display the plot
+p4
+```
+
+<br>
+
+The number of total security incidents shows **strong seasonality**, which we will analyze further below. By interactively deselecting the total attack line in the legend, we observed different patterns among the various means of attack. **Shooting is by far the most dominant method**, clearly exceeding the counts for other attack types. **Kidnappings**, **aerial bombardments**, and **bodily assaults** are also the primary methods, while other methods occur rarely, typically in single-digit counts.
+
+Because monthly incident counts can vary greatly from year to year, analyzing data for individual years might not reveal the overall seasonal trends. To address this, we calculated the average number of attacks per month across multiple years. This approach smooths out random annual fluctuations and provides a clearer picture of the average security risk level for each month. Comparing the monthly averages for different attack methods helps **identify whether certain months or attack types consistently exhibit higher risk levels**.
+
+Accordingly, we created a monthly average line plot that displays both the total number of attacks and the primary attack methods, which include shooting, kidnapping, aerial bombardment, and bodily assault.
+
+<br>
+
+```{r}
+avg_total <- total_df %>% 
+  mutate(month = month(date)) %>% 
+  group_by(month) %>% 
+  summarise(avg_total = mean(total_attacks)) %>% 
+  ungroup()
+
+# 5. Calculate average attacks for each Means.of.attack for each month
+avg_means <- attack_means %>% 
+  filter(Means.of.attack %in% c('Shooting', 'Kidnapping', 'Bodily assault','Aerial bombardment')) %>%
+  mutate(month = month(date)) %>% 
+  group_by(month, Means.of.attack) %>% 
+  summarise(avg_count = mean(count)) %>% 
+  ungroup()
+
+p5 <- plot_ly() %>%
+  # Add the total average trace
+  add_trace(data = avg_total,
+            x = ~month, 
+            y = ~avg_total,
+            type = "scatter", 
+            mode = "lines+markers",
+            name = "Total",
+            hovertemplate = "Month: %{x}<br>Means: Total Attakcs<br>Average num of incidents: %{y:.2f}"
+)
+
+# For each Means.of.attack category, add a trace
+unique_means <- unique(avg_means$`Means.of.attack`)
+for(m in unique_means) {
+  p5 <- p5 %>% add_trace(data = avg_means %>% filter(`Means.of.attack` == m),
+                         x = ~month, 
+                         y = ~avg_count,
+                         type = "scatter", 
+                         mode = "lines+markers",
+                         name = m,
+                         customdata = m,
+                         hovertemplate = "Month: %{x}<br>Means: %{customdata}<br>Average num of incidents: %{y:.2f}")
+}
+
+# Set the layout for the chart
+p5 <- p5 %>% layout(title = "Average Monthly Attack Counts",
+                    xaxis = list(title = "Month"),
+                    yaxis = list(title = "Average Attack Count"))
+p5
+```
+
+<br>
+
+For **total attacks**, the highest average monthly counts were observed in June and October, with both months reaching 15 incidents on average. This pattern may be related to temperature, climate changes, and intensified seasonal conflicts. For example, `June` often experiences **higher temperatures**, leading to more frequent outdoor activities and humanitarian aid operations, while `October` may coincide with periods of **political or military transition**, triggering a surge in security incidents.
+
+Consistent with previous analysis, shooting is generally the most frequent method of attack, averaging around 4 incidents per month, which indicates that shootings are the most common attack method in conflict zones. In contrast, other attack methods rarely exceed an average of 4 incidents per month.
+
+For **aerial bombardment**, the average monthly count fluctuates significantly. Both `March` and `November` exceed 4 incidents on average. This may be attributed to **favorable weather and optimal aerial combat conditions** during those months, which facilitate large-scale air strikes or bombing operations. Conversely, `May` and `August` show the lowest averages, possibly due to high temperatures, heavy rains, or other adverse weather conditions that limit aerial operations, resulting in fewer airstrike events.
+
+**Bodily assault** occurs at an average of approximately 3.5 incidents per month, but the numbers rise to over 4 in `February` and `June`. This could reflect that during the transition from winter to early summer, factors such as **changing climate, increased population mobility, and weaker local security** measures lead to more frequent face-to-face violent conflicts.
+
+For **kidnapping**, the incident counts also display significant fluctuations, with peaks occurring in `July` and `October`. This may be related to relatively **relaxed security measures** during summer vacation periods. In contrast, `December` records the lowest counts, potentially because **winter conditions limit operational activities** or because enhanced security measures are implemented during the holiday season.
+
+These seasonal variations reflect changes in the frequency and security risk levels of humanitarian aid operations throughout the year, providing important insights for better understanding regional risks and for formulating effective emergency response strategies.
+
+
+## Conclusion
+
+Through a multi-faceted analysis of global security incident data, we can draw several key conclusions. 
+
+**Overall**, from 1997 to 2024, the number of security incidents has shown a significant upward trend accompanied by notable fluctuations. This reflects both the escalating instability in conflict regions and the advancements in weapon technologies. 
+
+**Geographically**, security incidents are primarily concentrated in Africa and the Middle East, which is closely linked to the long-term political and military turmoil in those regions. 
+
+There are marked differences in the risks faced by **different humanitarian organizations**. INGOs have consistently been exposed to the highest levels of risk, while the UN has experienced abnormally high victim counts in specific years due to intense conflict in certain regions. 
+
+Security incidents exhibit a clear **seasonal pattern**, with total incident counts peaking in June and October. This is possibly due to higher temperatures or shifts in political and military conditions. Moreover, **different methods of attack** display their own unique seasonal trends. For instance, shooting incidents remain relatively stable, while aerial bombardments, violent assaults, and kidnappings peak in particular months.
+
+## Recommendation
+
+First, policymakers and relevant organizations should strengthen **early warning and monitoring systems for high-risk periods and regions**. In *critical months* such as June and October, proactive deployment of security measures, such as increasing on-site protection personnel and enhancing emergency response plans, is essential to minimize the threat to aid workers when incidents occur. In *regions* like Africa and the Middle East, governments and the international community should work closely together to improve local security conditions and enhance the protection of both civilians and humanitarian aid workers. Additionally, adapting and optimizing security intervention strategies in response to regional conflicts and shifts in political conditions is crucial.
+
+Second, for humanitarian organizations such as INGOs that have been consistently exposed to high risks, establishing a **dynamic risk assessment mechanism** is highly recommended. Regularly reviewing and updating safety strategies based on specific data from different years can help these organizations tailor their internal security measures. For example, organizations should consider *specialized training for personnel deployed in high-risk areas, strengthen inter-organizational information sharing, and enforce stricter security protocols* during periods of heightened risk.
+
+Third, given the seasonal variations in different attack methods, **tailored response strategies should be developed for shootings, aerial bombardments, violent assaults, and kidnappings**. Particularly when incidents like aerial bombardments and kidnappings peak in specific months, relevant authorities should consider adjusting operational and protective measures. This could include enhancing meteorological monitoring and emergency response during months prone to air strikes, and bolstering operational security during periods when kidnapping risks are high, ensuring that humanitarian operations are less vulnerable to sudden violent disruptions.
+
+Finally, **continuous data monitoring and analysis** is essential for optimizing security measures. It is recommended that all relevant organizations consistently collect and analyze security incident data, utilizing advanced data analysis and visualization tools to update risk early warning systems in real time. This will provide robust data support for developing more scientific and effective security protection strategies.
+
+Those who bring light to others should never be left to struggle alone in the dark. Each of us must shoulder the responsibility of providing support to those who spread hope through their lives. Only by doing so can we, as a global community united in mutual aid and rescue, construct warm barriers to dispel the cold and darkness, and together, lead a brighter and more harmonious tomorrow!

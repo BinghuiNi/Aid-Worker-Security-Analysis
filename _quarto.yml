@@ -1,25 +1,14 @@
 project:
   type: website
+  output-dir: docs
 
 website:
-  title: "Aid-Worker-Security-Analysis"
+  title: "Aid Worker Security Analysis"
   navbar:
-    search: true
+    left:
+      - href: index.qmd
+        text: Home
 
-  sidebar:
-    style: "docked"
-    contents:
-      - href: introduction.qmd
-        text: Introduction
-      - href: data_processing.ipynb
-        text: Data Processing
-      - href: dv.ipynb
-        text: Data Visualization
-      - href: report.ipynb
-        text: Story Telling
-
-
-  
 format:
   html:
     theme: zephyr
@@ -28,4 +17,6 @@ format:
     sidebar: left
     bibliography:   ./assets/reference.bib
     csl:  ./assets/nature.csl
+
+
 
