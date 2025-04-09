@@ -1,0 +1,85 @@
+Aid Worker Security Database (AWSD) 记录了对人道主义援助工作者的安全事件，我们可以利用这个数据集进行可视化分析，以揭示援助工作者面临的风险模式和趋势。以下是数据集各列的详细解释：  
+
+### **1. 事件信息**  
+- **Incident ID**：每个事件的唯一标识符。  
+- **Year**、**Month**、**Day**：事件发生的年份、月份和日期。  
+
+### **2. 地理信息**  
+- **Country Code**：事件发生国的 ISO 3166-1 代码（如“AF”代表阿富汗）。  
+- **Country**：事件发生的国家名称。  
+- **Region**：事件发生的大致区域（如中东、撒哈拉以南非洲等）。  
+- **District**：事件发生的行政区划（如省、市、县）。  
+- **City**：事件发生的城市或城镇。  
+- **Latitude**、**Longitude**：事件发生地点的经纬度坐标。  
+
+### **3. 机构类型**（事件涉及哪些援助组织）  
+这些列使用）表示事件是否涉及某类组织：  
+- **UN**：联合国（United Nations）机构。  
+- **INGO**（International Non-Governmental Organization）：国际非政府组织，如红十字会、乐施会等。  
+- **ICRC**（International Committee of the Red Cross）：红十字国际委员会。  
+- **NRCS and IFRC**（National Red Cross Societies and International Federation of Red Cross and Red Crescent Societies）：各国红十字会及红十字与红新月会国际联合会。  
+- **NNGO**（National Non-Governmental Organization）：国家级非政府组织。  
+- **Other**：其他未分类的组织。  
+
+### **4. 受害者统计**  
+**按国籍划分**  
+- **Nationals killed**：本国援助工作者遇害人数。  
+- **Nationals wounded**：本国援助工作者受伤人数。  
+- **Nationals kidnapped**：本国援助工作者被绑架人数。  
+- **Total nationals**：本国援助工作者受影响的总人数（遇害+受伤+被绑架）。  
+- **Internationals killed**：国际援助工作者遇害人数。  
+- **Internationals wounded**：国际援助工作者受伤人数。  
+- **Internationals kidnapped**：国际援助工作者被绑架人数。  
+- **Total internationals**：国际援助工作者受影响的总人数（遇害+受伤+被绑架）。  
+- **Total killed**：所有遇害的援助工作者（本国+国际）。  
+- **Total wounded**：所有受伤的援助工作者（本国+国际）。  
+- **Total kidnapped**：所有被绑架的援助工作者（本国+国际）。  
+- **Total affected**：所有受影响的援助工作者（遇害+受伤+被绑架）。  
+
+**按性别划分**  
+- **Gender Male**：受害者中男性人数。  
+- **Gender Female**：受害者中女性人数。  
+- **Gender Unknown**：性别未知的受害者人数。  
+
+### **5. 事件细节**  
+- **Means of attack**：攻击方式（如枪击、爆炸、绑架等）。  
+- **Attack context**：事件发生的背景（如战区、自然灾害后援助行动等）。  
+- **Location**：更具体的事件发生地点（如“医院”或“难民营”）。  
+- **Motive**：袭击动机（如政治、经济或宗教原因）。  
+- **Actor type**：袭击者的类型（如武装组织、犯罪团伙、政府军等）。  
+- **Actor name**：已知袭击者的名称（如果可用）。  
+- **Details**：事件的具体描述。  
+
+### **6. 数据验证和来源**  
+- **Verified**：事件是否经过验证（1=已验证，0=未验证）。  
+- **Source**：事件数据的来源（如新闻报道、人道主义组织等）。  
+
+---
+
+### **如何利用该数据集进行可视化分析？**  
+我们可以从多个角度进行探索，例如：  
+1. **时间趋势分析**  
+   - 每年的袭击事件数量趋势（折线图）。  
+   - 每年遇害/受伤/被绑架的援助人员数量变化（堆叠柱状图）。  
+
+2. **地理分析**  
+   - 不同国家/地区发生的援助工作者安全事件数量（世界地图热图）。  
+   - 哪些国家/地区援助工作者遇害率最高（柱状图或气泡图）。  
+
+3. **攻击方式与背景**  
+   - 不同类型的袭击方式占比（饼图或桑基图）。  
+   - 绑架、枪击、爆炸等不同袭击方式的趋势（折线图）。  
+
+4. **受害者特征分析**  
+   - 本国 vs. 国际援助工作者受害对比（分组柱状图）。  
+   - 男性 vs. 女性受害者比例（堆叠柱状图）。  
+
+5. **袭击者分析**  
+   - 不同类型袭击者的攻击频率（条形图）。  
+   - 特定组织在不同年份的攻击次数变化（折线图）。
+
+rsync -alvr –delete /mnt/c/Users/nibh/Desktop/Aid-Worker-Security-Analysis/docs/* binghuig@gtown03.reclaimhosting.com:/home/binghuig/public_html/aid/
+
+project:
+   type: website
+   output-dir: docs
