@@ -13,6 +13,8 @@ nocite: |
   @*
 ---
 
+<br>
+
 **Humanitarian aid workers face dangers every day**, whether in regions affected by war or areas hit by natural disasters. Despite the risks, they bravely work to help those who need it most, providing food, medical care, and shelter. More than that, they bring emotional comfort and hope to countless people suffering from disasters.
 
 ![A female aid worker with the American Red Cross plays with a child in Haiti. Talia Frenkel / American Red Cross)](img/Red-Cross-Haiti.jpg)
@@ -29,14 +31,119 @@ In this research, we analyze data from AWSD to examine security incidents from m
 
 When conducting a macro-level analysis of security incidents, we first need to understand the overall trends. By counting the total number of security incidents per year, we can clearly observe the long-term trend and fluctuations. It helps identify key periods, such as years with sudden increases in incidents. It also provides a foundation for further exploring factors that may influence these events. Therefore, we created a time series plot showing the annual number of incidents, in order to illustrate how event frequency changes over time.
 
-<br>
-
 ```{r}
 library(dplyr)
 library(tidyr)
 library(lubridate)
 library(plotly)
 df <- read.csv("data/security_incidents.csv")
+
+# Dedine plot theme
+theme_plotly <- function(p, title_text = "Default Title") {
+  p %>% layout(
+    title = list(
+      text = title_text,
+      font = list(
+        family = "Georgia",
+        size = 24,
+        color = "#5373ff"
+      ),
+      x = 0.5,
+      y = 0.99
+    ),
+    xaxis = list(
+      titlefont = list(
+        family = "Georgia",
+        size = 20,
+        color = "#5373ff"
+      ),
+      tickfont = list(
+        family = "Arial",
+        size = 16,
+        color = "#5373ff"
+      ),
+      zeroline = TRUE,
+      zerolinecolor = "#5373ff",
+      zerolinewidth = 1
+    ),
+    yaxis = list(
+      titlefont = list(
+        family = "Georgia",
+        size = 20,
+        color = "#5373ff"
+      ),
+      tickfont = list(
+        family = "Arial",
+        size = 16,
+        color = "#5373ff"
+      ),
+      showline = TRUE,
+      linecolor = "#5373ff",
+      zeroline = TRUE,
+      zerolinecolor = "#5373ff",
+      zerolinewidth = 1
+    ),
+    plot_bgcolor = "#fffcf0",
+    paper_bgcolor = "#fffcf0",
+    font = list(
+      family = "Georgia",
+      size = 16,
+      color = "#5373ff"
+    )
+  )
+}
+theme_plotly.2 <- function(p, title_text = "Default Title") {
+  p %>% layout(
+    title = list(
+      text = title_text,
+      font = list(
+        family = "Georgia",
+        size = 24,
+        color = "#5373ff"
+      ),
+      x = 0.5,
+      y = 0.99
+    ),
+    xaxis = list(
+      titlefont = list(
+        family = "Georgia",
+        size = 20,
+        color = "#5373ff"
+      ),
+      tickfont = list(
+        family = "Arial",
+        size = 16,
+        color = "#5373ff"
+      ),
+      zeroline = TRUE,
+      zerolinecolor = "#5373ff",
+      zerolinewidth = 1
+    ),
+    yaxis = list(
+      titlefont = list(
+        family = "Georgia",
+        size = 20,
+        color = "#5373ff"
+      ),
+      tickfont = list(
+        family = "Arial",
+        size = 16,
+        color = "#5373ff"
+      ),
+      zeroline = TRUE,
+      zerolinecolor = "#5373ff",
+      zerolinewidth = 1
+    ),
+    plot_bgcolor = "#fffcf0",
+    paper_bgcolor = "#fffcf0",
+    font = list(
+      family = "Georgia",
+      size = 16,
+      color = "#5373ff"
+    )
+  )
+}
+
 
 df <- df %>%
   mutate(date = make_date(Year, Month)) %>%
@@ -55,12 +162,16 @@ p <- plot_ly(data = yearly_data,
              type = "scatter",
              mode = "lines+markers",
              name = "Incidents",
+             line = list(color = "#5373ff"),
+             marker = list(color = "#5373ff"),  
              hovertemplate = "Year: %{x}<br>Num of incidents: %{y}<br>Num of victims: %{customdata}") %>%
   layout(title = "Security Incidents Trend Over Time",
          xaxis = list(title = "Year"),
-         yaxis = list(title = "Number of Incidents", range = c(0, max(yearly_data$count))))
+         yaxis = list(
+          title = "Number of Incidents", 
+          range = c(0, max(yearly_data$count))))
 
-p
+theme_plotly(p, title_text = "Security Incidents Trend Over Time")
 ```
 
 <br>
@@ -110,11 +221,31 @@ fig.update_layout(
     geo=dict(
         showframe=False,
         showcoastlines=False,
-        projection_type="equirectangular"
-    )
+        projection_type="equirectangular",
+        bgcolor="#fffcf0"
+    ),
+    title=dict(
+        text="Animated Global Map: Number of Security Incidents Over Time",
+        font=dict(
+            family="Georgia",
+            size=24,
+            color="#5373ff"
+        ),
+        x=0.5,
+        y=0.99,
+    ),
+    paper_bgcolor="#fffcf0",
+    plot_bgcolor="white",
+    font=dict(
+        family="Georgia",
+        size=16,
+        color="#5373ff"
+    ),
+    margin=dict(l=0, r=0, t=30, b=0)
 )
-
 ```
+
+<br>
 
 You can zoom in on the map and hover to view the number of security incidents and victims for each country per year.
 
@@ -133,8 +264,6 @@ In **South Sudan**, 2018 saw 111 incidents. This period followed the country's i
 ## Trends in Humanitarian Organization Involvement
 
 From the analysis above, it is clear that the number of security incidents and the number of victims are positively correlated. Additionally, it is important to note that different humanitarian organizations (such as the `UN, INGOs, ICRC, NRCS, IFRC, NNGOs`) face varying levels of risk when performing aid work. To provide a more intuitive view of each organization's actual involvement over the years, we have used an animated scatter plot. This visualization allows us to observe the frequency of incidents faced by each organization and the variation in the number of affected aid workers, offering data support for understanding each organization's risk exposure and response strategies.
-
-<br>
 
 ```{r}
 org_long <- df %>% 
@@ -175,7 +304,7 @@ p2 <- plot_ly(
     yaxis = list(title = "Num of Victims")
   )
 
-p2
+theme_plotly.2(p2, "Dynamic Overview of Humanitarian Organization Involvement")
 ```
 
 <br>
@@ -197,8 +326,6 @@ Additionally, another unusually high number of `UN` victims in 2024 is also rela
 The victim statistics of security incidents directly reflect the risks and losses experienced by aid workers. Since different incident types (killed, wounded, kidnapped) and nationalities (Nationals vs. Internationals) affect aid workers in various ways, a layered analysis of this data is essential.
 
 To visualize this, we used an animated stacked bar plot to display the number of victims by nationality  for each incident type. This plot clearly shows the varying proportions and trends among different groups, highlighting the dynamic changes in victim statistics over time.
-
-<br>
 
 ```{r}
 agg_df <- df %>%
@@ -241,7 +368,7 @@ p3 <- plot_ly(
     yaxis = list(title = "Number of Victims")
   )
 
-p3
+theme_plotly(p3, "Victim Breakdown by Nationality and Incident Type")
 ```
 
 <br>
@@ -259,8 +386,6 @@ Between 1997 and 2004, **the highest numbers were observed in the "killed" categ
 In this section, we further investigated the frequency differences among various means of attack and uncovered any specific temporal patterns. By examining the distribution of different attack methods (such as shootings, aerial bombardment, kidnappings, etc.) on a monthly basis, we can identify which methods are more dominant in certain months and analyze potential seasonal factors that influence these incidents. 
 
 We created a monthly trend plot that breaks down the number of security incidents by the means of attack, providing specific temporal insights to aid in prevention and emergency response planning.
-
-<br>
 
 ```{r}
 total_df <- df %>%
@@ -308,7 +433,7 @@ p4 <- p4 %>% layout(
 )
 
 # Display the plot
-p4
+theme_plotly(p4, "Monthly Number of Incidents by Means of Attack")
 ```
 
 <br>
@@ -318,8 +443,6 @@ The number of total security incidents shows **strong seasonality**, which we wi
 Because monthly incident counts can vary greatly from year to year, analyzing data for individual years might not reveal the overall seasonal trends. To address this, we calculated the average number of attacks per month across multiple years. This approach smooths out random annual fluctuations and provides a clearer picture of the average security risk level for each month. Comparing the monthly averages for different attack methods helps **identify whether certain months or attack types consistently exhibit higher risk levels**.
 
 Accordingly, we created a monthly average line plot that displays both the total number of attacks and the primary attack methods, which include shooting, kidnapping, aerial bombardment, and bodily assault.
-
-<br>
 
 ```{r}
 avg_total <- total_df %>% 
@@ -364,9 +487,16 @@ for(m in unique_means) {
 
 # Set the layout for the chart
 p5 <- p5 %>% layout(title = "Average Monthly Attack Counts",
-                    xaxis = list(title = "Month"),
-                    yaxis = list(title = "Average Attack Count", range = c(0, max_y)))
-p5
+                    xaxis = list(
+                      title = "Month",
+                      tickmode = "array",
+                      tickvals = 1:12,
+                      ticktext = month.abb
+                    ),
+                    yaxis = list(
+                      title = "Average Attack Count", 
+                      range = c(0, max_y)))
+theme_plotly(p5, "Average Monthly Attack Counts")
 ```
 
 <br>
@@ -409,3 +539,5 @@ Third, given the seasonal variations in different attack methods, **tailored res
 Finally, **continuous data monitoring and analysis** is essential for optimizing security measures. It is recommended that all relevant organizations consistently collect and analyze security incident data, utilizing advanced data analysis and visualization tools to update risk early warning systems in real time. This will provide robust data support for developing more scientific and effective security protection strategies.
 
 Those who bring light to others should never be left to struggle alone in the dark. Each of us must shoulder the responsibility of providing support to those who spread hope through their lives. Only by doing so can we, as a global community united in mutual aid and rescue, construct warm barriers to dispel the cold and darkness, and together, lead a brighter and more harmonious tomorrow!
+
+<br><br>

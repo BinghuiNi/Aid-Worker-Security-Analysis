@@ -1,1 +1,39 @@
 /* css styles */
+h1 {
+    color: #2d1bd8;
+    font-size: 40px;
+  }
+
+h2 {
+    color: #273491;
+    font-size: 30px;
+  }
+  
+body {
+    font-family: serif;
+    color: #34495E;
+    background-color: #EAEEFF;  
+    font-size: 20px;
+  }
+  
+main {
+    background-color: #EAEEFF;  
+  }
+
+  #quarto-appendix {
+    background-color: #EAEEFF;
+    padding-top: 0 !important;
+  }
+  
+  .quarto-appendix-contents {
+    background-color: #EAEEFF;
+  }
+  
+  #quarto-bibliography {
+    background-color: #EAEEFF;
+  }
+  
+  #refs {
+    background-color: #EAEEFF;
+  }
+  
