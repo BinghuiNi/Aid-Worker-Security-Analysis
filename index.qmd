@@ -54,10 +54,11 @@ p <- plot_ly(data = yearly_data,
              customdata = ~total_affected,
              type = "scatter",
              mode = "lines+markers",
+             name = "Incidents",
              hovertemplate = "Year: %{x}<br>Num of incidents: %{y}<br>Num of victims: %{customdata}") %>%
   layout(title = "Security Incidents Trend Over Time",
          xaxis = list(title = "Year"),
-         yaxis = list(title = "Number of Incidents"))
+         yaxis = list(title = "Number of Incidents", range = c(0, max(yearly_data$count))))
 
 p
 ```
@@ -335,6 +336,8 @@ avg_means <- attack_means %>%
   summarise(avg_count = mean(count)) %>% 
   ungroup()
 
+max_y <- max(c(avg_total$avg_total, avg_means$avg_count), na.rm = TRUE)
+
 p5 <- plot_ly() %>%
   # Add the total average trace
   add_trace(data = avg_total,
@@ -362,7 +365,7 @@ for(m in unique_means) {
 # Set the layout for the chart
 p5 <- p5 %>% layout(title = "Average Monthly Attack Counts",
                     xaxis = list(title = "Month"),
-                    yaxis = list(title = "Average Attack Count"))
+                    yaxis = list(title = "Average Attack Count", range = c(0, max_y)))
 p5
 ```
 
@@ -371,6 +374,8 @@ p5
 For **total attacks**, the highest average monthly counts were observed in June and October, with both months reaching 15 incidents on average. This pattern may be related to temperature, climate changes, and intensified seasonal conflicts. For example, `June` often experiences **higher temperatures**, leading to more frequent outdoor activities and humanitarian aid operations, while `October` may coincide with periods of **political or military transition**, triggering a surge in security incidents.
 
 Consistent with previous analysis, shooting is generally the most frequent method of attack, averaging around 4 incidents per month, which indicates that shootings are the most common attack method in conflict zones. In contrast, other attack methods rarely exceed an average of 4 incidents per month.
+
+Although the monthly differences appear minor, usually just one or two incidents, these variations may still be significant when considering the cumulative impact over time, the concentration of specific attack types in certain regions, or their broader implications for security and response planning.
 
 For **aerial bombardment**, the average monthly count fluctuates significantly. Both `March` and `November` exceed 4 incidents on average. This may be attributed to **favorable weather and optimal aerial combat conditions** during those months, which facilitate large-scale air strikes or bombing operations. Conversely, `May` and `August` show the lowest averages, possibly due to high temperatures, heavy rains, or other adverse weather conditions that limit aerial operations, resulting in fewer airstrike events.
 
